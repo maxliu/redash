@@ -13,7 +13,8 @@ services:
       - "5000:5000"
       - "5678:5678"
     volumes:
-      - ".:/app"
+      - "./redash/settings:/app/redash/settings"
+      - "./redash/query_runner:/app/redash/query_runner"
     environment:
       PYTHONUNBUFFERED: 0
       REDASH_LOG_LEVEL: "INFO"
@@ -24,9 +25,8 @@ services:
     build: .
     command: dev_worker
     volumes:
-      - type: bind
-        source: .
-        target: /app
+      - "./redash/settings:/app/redash/settings"
+      - "./redash/query_runner:/app/redash/query_run"
     depends_on:
       - server
     environment:

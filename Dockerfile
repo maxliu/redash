@@ -1,28 +1,30 @@
-FROM node:10 as frontend-builder
 
-WORKDIR /frontend
-COPY package.json package-lock.json /frontend/
-RUN npm install
+FROM redash/redash:preview
 
-COPY client /frontend/client
-COPY webpack.config.js /frontend/
-RUN npm run build
+# FROM redash/redash:7.0.0.b18042
+####
 
-FROM redash/base:debian
+USER root
 
-# Controls whether to install extra dependencies needed for all data sources.
-ARG skip_ds_deps
+RUN sudo apt update -y
+RUN sudo apt install -y unixodbc-dev iodbc
 
-# We first copy only the requirements file, to avoid rebuilding on every file
-# change.
-COPY requirements.txt requirements_bundles.txt requirements_dev.txt requirements_all_ds.txt ./
-RUN pip install -r requirements.txt -r requirements_dev.txt
-RUN if [ "x$skip_ds_deps" = "x" ] ; then pip install -r requirements_all_ds.txt ; else echo "Skipping pip install -r requirements_all_ds.txt" ; fi
+# RUN usermod -aG sudo redash
+# RUN echo "redash ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/redash
 
-COPY . /app
-COPY --from=frontend-builder /frontend/client/dist /app/client/dist
-RUN chown -R redash /app
+# RUN  echo "America/New_York" > /etc/timezone
+
+RUN pip install pyodbc
+
 USER redash
 
-ENTRYPOINT ["/app/bin/docker-entrypoint"]
-CMD ["server"]
+
+COPY odbcinst.ini /etc/odbcinst.ini
+
+ARG INCUBATOR_VER=unknown
+
+COPY libcacheodbc.so /app/libcacheodbc.so
+
+COPY intersysiris.png /app/client/app/assets/images/db-logos/
+
+COPY intersysiris.png /app/client/dist/images/db-logos/

@@ -1,6 +1,6 @@
 version: '2'
 x-redash-service: &redash-service
-  image: redash/redash:7.0.0.b18042
+  image: redash/redash:liu2
   depends_on:
     - postgres
     - redis
@@ -12,6 +12,8 @@ services:
     command: server
     ports:
       - "5000:5000"
+    volumes:
+      - "~/redashlrsm/setup/dockers/liu2_DEV:/app/liu2_DEV"
     environment:
       REDASH_WEB_WORKERS: 4
   scheduler:

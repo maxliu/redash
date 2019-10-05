@@ -1,34 +1,29 @@
 # This configuration file is for the **development** setup.
 # For a production example please refer to setup/docker-compose.yml.
-version: '3.2'
+version: '3'
 services:
-
   server:
-    build: .
+    image: redash_jvm:latest 
     command: dev_server
     depends_on:
       - postgres
       - redis
-      - email
     ports:
       - "5000:5000"
       - "5678:5678"
     volumes:
-      - "./redash/settings:/app/redash/settings"
-      - "./redash/query_runner:/app/redash/query_runner"
+      - ".:/app"
     environment:
       PYTHONUNBUFFERED: 0
       REDASH_LOG_LEVEL: "INFO"
       REDASH_REDIS_URL: "redis://redis:6379/0"
       REDASH_DATABASE_URL: "postgresql://postgres@postgres/postgres"
       REDASH_RATELIMIT_ENABLED: "false"
-
   worker:
-    build: .
-    command: dev_worker
+    image: redash_jvm:latest 
+    command: scheduler
     volumes:
-      - "./redash/settings:/app/redash/settings"
-      - "./redash/query_runner:/app/redash/query_run"
+      - ".:/app"
     depends_on:
       - server
     environment:
@@ -41,7 +36,6 @@ services:
   redis:
     image: redis:3-alpine
     restart: unless-stopped
-
   postgres:
     image: postgres:9.5-alpine
     # The following turns the DB into less durable, but gains significant performance improvements for the tests run (x3
@@ -51,24 +45,3 @@ services:
       - "15432:5432"
     command: "postgres -c fsync=off -c full_page_writes=off -c synchronous_commit=OFF"
     restart: unless-stopped
-
-  email:
-    image: djfarrelly/maildev
-    ports:
-      - "1080:80"
-    restart: unless-stopped
-
-
-  #iris:
-    #container_name: iris_host
-    #image: store/intersystems/iris:2019.1.0.511.0-community
-    #volumes:
-     #- ./user:/durable
-    #environment:
-     #- ISC_DATA_DIRECTORY=/durable
-    #ports:
-     #- "52773:52773"
-     #- "51773:51773"
-    #command: --password-file /durable/password/password.txt
-
-#docker run -it --rm -p 51773:51773  -p 52773:52773 -p 1883:1883 -p 1978:1978 --volume $(pwd)/user/:/durable --env ISC_DATA_DIRECTORY=/durable/iris  --name iris intersystemsdc/irisdemo-base-irisb-community:2019.3.0.306.0-community  --password-file /durable/password.txt

@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  iris:
+    container_name: iris
+    image: intersystemsdc/irisdemo-base-irisb-community:2019.3.0.306.0-community
+    volumes:
+     - /home/maxliu:/durable
+    environment:
+     - ISC_DATA_DIRECTORY=/durable
+    ports:
+     - "9092:52773"
+     - "9091:51773"
+     - "9091:51773"
+     - "9091:51773"
+    command: --password-file /durable/password/password.txt
+
+
+docker run -it --rm -p 51773:51773  -p 52773:52773 -p 1883:1883 -p 1978:1978  --name iris intersystemsdc/irisdemo-base-irisb-community:2019.3.0.306.0-community

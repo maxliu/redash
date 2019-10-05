@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  iris:
+    container_name: my-iris
+    image: store/intersystems/iris:2019.1.0.511.0-community
+    volumes:
+     - /home/maxliu:/durable
+    environment:
+     - ISC_DATA_DIRECTORY=/durable
+    ports:
+     - "9092:52773"
+     - "9091:51773"
+    command: --password-file /durable/password/password.txt

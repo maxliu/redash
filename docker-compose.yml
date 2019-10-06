@@ -2,30 +2,33 @@
 # For a production example please refer to setup/docker-compose.yml.
 version: '3.2'
 services:
+
   server:
     build: .
     command: dev_server
     depends_on:
       - postgres
       - redis
+      - email
     ports:
       - "5000:5000"
       - "5678:5678"
     volumes:
-      - ".:/app"
+      - "./redash/settings:/app/redash/settings"
+      - "./redash/query_runner:/app/redash/query_runner"
     environment:
       PYTHONUNBUFFERED: 0
       REDASH_LOG_LEVEL: "INFO"
       REDASH_REDIS_URL: "redis://redis:6379/0"
       REDASH_DATABASE_URL: "postgresql://postgres@postgres/postgres"
       REDASH_RATELIMIT_ENABLED: "false"
+
   worker:
     build: .
     command: dev_worker
     volumes:
-      - type: bind
-        source: .
-        target: /app
+      - "./redash/settings:/app/redash/settings"
+      - "./redash/query_runner:/app/redash/query_run"
     depends_on:
       - server
     environment:
@@ -38,6 +41,7 @@ services:
   redis:
     image: redis:3-alpine
     restart: unless-stopped
+
   postgres:
     image: postgres:9.5-alpine
     # The following turns the DB into less durable, but gains significant performance improvements for the tests run (x3
@@ -47,3 +51,24 @@ services:
       - "15432:5432"
     command: "postgres -c fsync=off -c full_page_writes=off -c synchronous_commit=OFF"
     restart: unless-stopped
+
+  email:
+    image: djfarrelly/maildev
+    ports:
+      - "1080:80"
+    restart: unless-stopped
+
+
+  intersystemsiris:
+    container_name: my-iris
+    image: store/intersystems/iris-community:2019.3.0.309.0 
+    volumes:
+     - "./user:/durable"
+    #environment:
+     #- ISC_DATA_DIRECTORY=/durable
+    ports:
+     - "52773:52773"
+     - "51773:51773"
+    command: --password-file /durable/password.txt
+
+#docker run -it --rm -p 51773:51773  -p 52773:52773 -p 1883:1883 -p 1978:1978 --volume $(pwd)/user/:/durable --env ISC_DATA_DIRECTORY=/durable/iris  --name iris intersystemsdc/irisdemo-base-irisb-community:2019.3.0.306.0-community  --password-file /durable/password.txt
